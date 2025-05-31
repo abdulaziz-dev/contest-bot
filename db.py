@@ -30,11 +30,8 @@ def init_db():
     cur.execute("""
     CREATE TABLE IF NOT EXISTS votes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        subject_id INTEGER,
+        user_id INTEGER UNIQUE,
         teacher_id INTEGER,
-        UNIQUE(user_id, subject_id),
-        FOREIGN KEY (subject_id) REFERENCES subjects(id),
         FOREIGN KEY (teacher_id) REFERENCES teachers(id)
     )
     """)
@@ -58,12 +55,11 @@ def get_teachers_by_subject(subject_id):
     conn.close()
     return results
 
-def add_vote(user_id, subject_id, teacher_id):
+def add_vote(user_id, teacher_id):
     conn = sqlite3.connect("votes.db")
     cur = conn.cursor()
     try:
-        cur.execute("INSERT INTO votes (user_id, subject_id, teacher_id) VALUES (?, ?, ?)",
-                    (user_id, subject_id, teacher_id))
+        cur.execute("INSERT INTO votes (user_id, teacher_id) VALUES (?, ?)", (user_id, teacher_id))
         conn.commit()
         return True
     except sqlite3.IntegrityError:
@@ -75,12 +71,11 @@ def get_vote_results():
     conn = sqlite3.connect("votes.db")
     cur = conn.cursor()
     cur.execute("""
-    SELECT s.name, t.name, COUNT(v.id) as vote_count
+    SELECT t.name, COUNT(v.id) as vote_count
     FROM votes v
-    JOIN subjects s ON v.subject_id = s.id
     JOIN teachers t ON v.teacher_id = t.id
-    GROUP BY v.subject_id, v.teacher_id
-    ORDER BY s.name, vote_count DESC
+    GROUP BY v.teacher_id
+    ORDER BY vote_count DESC
     """)
     results = cur.fetchall()
     conn.close()

@@ -20,10 +20,7 @@ async def show_results(msg: Message):
 
     response = "📊 <b>Ovozlar natijasi:</b>\n\n"
     current_subject = None
-    for subject, teacher, count in results:
-        if subject != current_subject:
-            current_subject = subject
-            response += f"\n🧪 <b>{subject}</b>\n"
+    for teacher, count in results:
         response += f"👨‍🏫 {teacher}: <b>{count}</b> ta ovoz\n"
 
     await msg.answer(response)
