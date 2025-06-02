@@ -49,8 +49,9 @@ async def contact_handler(msg: Message):
 @router.callback_query(F.data.startswith("subject_"))
 async def subject_callback(call: CallbackQuery, state: FSMContext):
     subject_id = int(call.data.split("_")[1])
-    # await state.update_data(subject_id=subject_id)
-    await call.message.edit_text("Ustozni tanlang:", reply_markup=teacher_keyboard(subject_id))
+    # await call.message.edit_text("Ustozni tanlang:", reply_markup=teacher_keyboard(subject_id))
+    await call.message.edit_text("Ustozni tanlang:",
+                                 reply_markup=teacher_keyboard(subject_id, page=0))
 
 @router.callback_query(F.data.startswith("teacher_"))
 async def teacher_callback(call: CallbackQuery, state: FSMContext):
@@ -64,3 +65,10 @@ async def teacher_callback(call: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "back")
 async def back_callback(call: CallbackQuery):
     await call.message.edit_text("Fanlardan birini tanlang:", reply_markup=subject_keyboard())
+
+@router.callback_query(F.data.startswith("page_"))
+async def pagination_handler(call: CallbackQuery, state: FSMContext):
+    _, subject_id, page = call.data.split("_")
+    subject_id = int(subject_id)
+    page = int(page)
+    await call.message.edit_text("Ustozni tanlang:", reply_markup=teacher_keyboard(subject_id, page))
