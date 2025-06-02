@@ -36,3 +36,10 @@ def teacher_keyboard(subject_id, page=0):
 
     builder.button(text="⬅️ Orqaga", callback_data="back")
     return builder.as_markup()
+
+def results_navigation_keyboard(page: int):
+    buttons = []
+    if page > 0:
+        buttons.append(InlineKeyboardButton(text="⬅️ Oldingi", callback_data=f"respage_{page - 1}"))
+    buttons.append(InlineKeyboardButton(text="➡️ Keyingi", callback_data=f"respage_{page + 1}"))
+    return InlineKeyboardMarkup(inline_keyboard=[buttons])

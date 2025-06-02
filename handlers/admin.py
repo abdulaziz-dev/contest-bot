@@ -1,26 +1,44 @@
-# === handlers/admin.py ===
-from aiogram import Router
+from aiogram import Router, F
+from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
-from aiogram.types import Message
-from db import get_vote_results
 from config import ADMIN_IDS
+from db import get_vote_results
+from keyboards.inline import results_navigation_keyboard
 
 router = Router()
 
-@router.message(Command("natijalar"))
-async def show_results(msg: Message):
-    if msg.from_user.id not in ADMIN_IDS:
-        await msg.answer("Sizga bu buyruqdan foydalanishga ruxsat yo'q.")
-        return
+RESULTS_PER_PAGE = 10
 
-    results = get_vote_results()
+def format_results(results, page: int):
     if not results:
-        await msg.answer("Hozircha hech qanday ovoz mavjud emas.")
+        return "Hali ovozlar yo'q."
+
+    start_number = page * RESULTS_PER_PAGE + 1
+    text = "📊 <b>Ovozlar natijasi:</b>\n\n"
+    for idx, (teacher, count) in enumerate(results, start=start_number):
+        text += f"👨‍🏫{idx}. {teacher}: {count} ta ovoz\n"
+    return text
+
+@router.message(Command("natijalar"))
+async def results_command(msg: Message):
+    if msg.from_user.id not in ADMIN_IDS:
         return
+    page = 0
+    offset = page * RESULTS_PER_PAGE
+    results = get_vote_results(offset=offset, limit=RESULTS_PER_PAGE)
+    await msg.answer(
+        format_results(results, page),
+        reply_markup=results_navigation_keyboard(page)
+    )
 
-    response = "📊 <b>Ovozlar natijasi:</b>\n\n"
-    current_subject = None
-    for teacher, count in results:
-        response += f"👨‍🏫 {teacher}: <b>{count}</b> ta ovoz\n"
-
-    await msg.answer(response)
+@router.callback_query(F.data.startswith("respage_"))
+async def results_pagination(call: CallbackQuery):
+    if call.from_user.id not in ADMIN_IDS:
+        return
+    page = int(call.data.split("_")[1])
+    offset = page * RESULTS_PER_PAGE
+    results = get_vote_results(offset=offset, limit=RESULTS_PER_PAGE)
+    await call.message.edit_text(
+        format_results(results, page),
+        reply_markup=results_navigation_keyboard(page)
+    )

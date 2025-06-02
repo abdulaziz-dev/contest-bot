@@ -67,7 +67,21 @@ def add_vote(user_id, teacher_id):
     finally:
         conn.close()
 
-def get_vote_results():
+# def get_vote_results():
+#     conn = sqlite3.connect("votes.db")
+#     cur = conn.cursor()
+#     cur.execute("""
+#     SELECT t.name, COUNT(v.id) as vote_count
+#     FROM votes v
+#     JOIN teachers t ON v.teacher_id = t.id
+#     GROUP BY v.teacher_id
+#     ORDER BY vote_count DESC
+#     """)
+#     results = cur.fetchall()
+#     conn.close()
+#     return results
+
+def get_vote_results(offset=0, limit=5):
     conn = sqlite3.connect("votes.db")
     cur = conn.cursor()
     cur.execute("""
@@ -76,7 +90,8 @@ def get_vote_results():
     JOIN teachers t ON v.teacher_id = t.id
     GROUP BY v.teacher_id
     ORDER BY vote_count DESC
-    """)
+    LIMIT ? OFFSET ?
+    """, (limit, offset))
     results = cur.fetchall()
     conn.close()
     return results
