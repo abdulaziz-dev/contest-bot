@@ -5,7 +5,8 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.types import Message, CallbackQuery
 
 from config import CHANNEL_USERNAME, CONTACT_GROUP_ID, INSTAGRAM_URL, \
-    TELEGRAM_CHANNEL_URL
+    TELEGRAM_CHANNEL_URL, VOTING_DEADLINE
+from datetime import datetime
 from db import add_vote, has_shared_contact, mark_contact_shared
 from keyboards.default import contact_keyboard
 from keyboards.inline import subject_keyboard, teacher_keyboard
@@ -48,13 +49,20 @@ async def contact_handler(msg: Message):
 
 @router.callback_query(F.data.startswith("subject_"))
 async def subject_callback(call: CallbackQuery, state: FSMContext):
+    if is_voting_closed():
+        await call.answer("Ovoz berish muddati tugagan.", show_alert=True)
+        return
+
     subject_id = int(call.data.split("_")[1])
-    # await call.message.edit_text("Ustozni tanlang:", reply_markup=teacher_keyboard(subject_id))
     await call.message.edit_text("Ustozni tanlang:",
                                  reply_markup=teacher_keyboard(subject_id, page=0))
 
 @router.callback_query(F.data.startswith("teacher_"))
 async def teacher_callback(call: CallbackQuery, state: FSMContext):
+    if is_voting_closed():
+        await call.answer("Ovoz berish muddati tugagan.", show_alert=True)
+        return
+
     teacher_id = int(call.data.split("_")[1])
     user_id = call.from_user.id
     if add_vote(user_id, teacher_id):
@@ -72,3 +80,6 @@ async def pagination_handler(call: CallbackQuery, state: FSMContext):
     subject_id = int(subject_id)
     page = int(page)
     await call.message.edit_text("Ustozni tanlang:", reply_markup=teacher_keyboard(subject_id, page))
+
+def is_voting_closed():
+    return datetime.now() > VOTING_DEADLINE

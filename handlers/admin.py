@@ -22,6 +22,7 @@ def format_results(results, page: int):
 @router.message(Command("natijalar"))
 async def results_command(msg: Message):
     if msg.from_user.id not in ADMIN_IDS:
+        await msg.answer("Sizga bu buyruqdan foydalanishga ruxsat yo'q.")
         return
     page = 0
     offset = page * RESULTS_PER_PAGE
